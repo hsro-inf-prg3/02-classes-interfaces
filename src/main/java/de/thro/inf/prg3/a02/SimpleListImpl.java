@@ -1,6 +1,5 @@
 package de.thro.inf.prg3.a02;
 
-import javax.swing.text.html.HTMLDocument;
 import java.util.Iterator;
 
 /**
@@ -9,27 +8,50 @@ import java.util.Iterator;
  */
 public class SimpleListImpl implements SimpleList, Iterable {
     private static class Element {
-        Object item;
-        Element next;
+        private Object item;
+
+        private Element next;
+
+        private final Object getItem() {
+            return item;
+        }
+
+        public void setItem(Object item) {
+            this.item = item;
+        }
+
+        public final Element getNext() {
+            return next;
+        }
+
+        public void setNext(Element next) {
+            this.next = next;
+        }
+
+        public Element() {
+            this(null);
+        }
+
+        public Element(Object item) {
+            setItem(item);
+            setNext(null);
+        }
     }
 
     /* Do not make it static to prevent collisions when using multiple instances of SimpleListImpl */
     private class SimpleIteratorImpl implements Iterator {
-        private int currentIndex = 0;
-
         private Element currentElement = head;
 
         @Override
         public boolean hasNext() {
-            return currentIndex < size && currentElement != null;
+            return currentElement != null;
         }
 
         @Override
         public Object next() {
             Element result = currentElement;
-            ++currentIndex;
-            currentElement = currentElement.next;
-            return result;
+            currentElement = currentElement.getNext();
+            return result.getItem();
         }
     }
 
@@ -40,20 +62,13 @@ public class SimpleListImpl implements SimpleList, Iterable {
     @Override
     public void add(Object o) {
         if (head == null) {
-            head = new Element();
-            head.item = o;
-            head.next = null;
+            head = new Element(o);
         } else {
             Element temp = head;
-            while (temp.next != null) {
-                temp = temp.next;
+            while (temp.getNext() != null) {
+                temp = temp.getNext();
             }
-
-            temp.next = new Element();
-            Element newElement = temp.next;
-            newElement.next = null;
-
-            newElement.item = o;
+            temp.setNext(new Element(o));
         }
         ++size;
     }
@@ -66,10 +81,17 @@ public class SimpleListImpl implements SimpleList, Iterable {
     @Override
     public SimpleList filter(SimpleFilter filter) {
         SimpleListImpl result = new SimpleListImpl();
-        for (Object o : result) {
-            if (filter.include(o)) {
-                result.add(o);
+
+        if (head == null) {
+            return new SimpleListImpl();
+        }
+
+        Element temp = head;
+        while (temp.getNext() != null) {
+            if (filter.include(temp.getItem())) {
+                result.add(temp.getItem());
             }
+            temp = temp.getNext();
         }
         return result;
     }
@@ -78,7 +100,4 @@ public class SimpleListImpl implements SimpleList, Iterable {
     public Iterator iterator() {
         return new SimpleIteratorImpl();
     }
-
-    // TODO: Implement the required methods.
-
 }
